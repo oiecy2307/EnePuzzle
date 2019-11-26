@@ -1,5 +1,9 @@
 package enepuzzle;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -8,6 +12,7 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.Stack;
 
 public class Tablero {
 	private int N;
@@ -34,6 +39,9 @@ public class Tablero {
         //cadenaMatriz =Arrays.deepToString(blocks);
     }
     
+    public String getState() {
+    	return cadenaMatriz;
+    }
     public Tablero getParent() {
         return parent;
     }
@@ -287,6 +295,8 @@ private static int heuristicOne(String currentState, String goalSate) {
 
 public static void bestFirstSearch(Tablero inicial, Tablero target) {
     // stateSet is a set that contains node that are already visited
+	
+	long tStart = System.currentTimeMillis();
     Set<String> stateSets = new HashSet<String>();
     int totalCost = 0;
     int time = 0;
@@ -299,12 +309,17 @@ public static void bestFirstSearch(Tablero inicial, Tablero target) {
     // a queue that contains nodes and their cost values sorted. 10 is the initial size
     PriorityQueue<Tablero> nodePriorityQueue = new PriorityQueue<Tablero>(10, comparator);
     Tablero currentNode = nodo;
+    
     while (!isGoal(currentNode.blocks,target.blocks)) {
+    	
         stateSets.add(currentNode.cadenaMatriz);
         Iterable<Tablero> nodeSuccessors = currentNode.neighbors();//NodeUtil.getSuccessors(currentNode.getState());
+        
         for (Tablero n : nodeSuccessors) {
+        	
             if (stateSets.contains(n.cadenaMatriz))
                 continue;
+            
             stateSets.add(n.cadenaMatriz);
             Tablero child = new Tablero(n.blocks);
             currentNode.addChild(child);
@@ -315,60 +330,70 @@ public static void bestFirstSearch(Tablero inicial, Tablero target) {
 
         }
         currentNode = nodePriorityQueue.poll();
-        time += 1;
+        //time += 1;
     }
-    // Here we try to navigate from the goal node to its parent( and its parent's parent and so on) to find the path
-   // NodeUtil.printSolution(currentNode, stateSets, root, time);
-    for(String s : stateSets) {
-    	System.out.println(s);
-    }
-    System.out.println("Total de movimientos: " + time);
+    
+    long tEnd = System.currentTimeMillis();
+    long tDelta = tEnd - tStart;
+    double elapsedSeconds = tDelta / 1000.0;
+        Stack<Tablero> sol = new Stack<Tablero>();
+        
+        while(currentNode!=null) {
+        	sol.push(currentNode);
+        	currentNode=currentNode.parent;
+        }
+        
+        System.out.println("Numero de movimientos: " + sol.size() + "\n");
+        System.out.println("Tiempo en segundos: " + elapsedSeconds + "\n");
+        while(!sol.empty()) {
+        	System.out.println(sol.pop());
+        }
+        
+        
+   
 
 }
 
-    public static void main(String[] args) {
-        // unit tests (not graded)
-    		/*Scanner StdIn = new Scanner(System.in);
-            int N = StdIn.nextInt();
-            int[][] blocks = new int[N][N];
-            for (int i = 0; i < N; i++) {
-                for (int j = 0; j < N; j++) {
-                    blocks[i][j] = StdIn.nextInt();
-                }
-            }*/
-    	    
-    	//1 2 4 0 6 3 7 5 8
+    public static void main(String[] args) throws IOException {
+        
+    	String archivo = "puzzle.txt";
+    	String cadena = "";
+    	FileReader fr = new FileReader(archivo);
+		BufferedReader bf = new BufferedReader(fr);
+		//int i =0;
+		cadena = bf.readLine();
+		int juegos = Integer.parseInt(cadena);	
+		
+		for(int i = 0; i<juegos;i++) {
+			cadena = bf.readLine();
+			cadena = bf.readLine();
+			int tamMatriz = Integer.parseInt(cadena);
+			cadena = bf.readLine();
+		String [] meta = cadena.split(" ");
+		cadena = bf.readLine();
+		String [] inicial = cadena.split(" ");	
+		
+		int[][] matrizMeta= new int[tamMatriz][tamMatriz];
+		int[][] matrizInicial= new int[tamMatriz][tamMatriz];
+		
+        for (int j = 0; j < tamMatriz; j++) {
+            for (int k = 0; k < tamMatriz; k++) {
+            	matrizMeta[j][k] = Integer.parseInt(meta[tamMatriz*j+k]);
+            	matrizInicial[j][k] = Integer.parseInt(inicial[tamMatriz*j+k]);
+                //this.cadenaMatriz = cadenaMatriz + blocks[i][j] + "";
+            	
+            	
+            }
+        }
+        Tablero board = new Tablero(matrizInicial);
+        Tablero board2 = new Tablero(matrizMeta);
+        
+        bestFirstSearch(board,board2);
+			
+		}
+		  bf.close();
     	
-    	int[][] blocks =  {{1,2,3},{4,5,6},{7,8,0}}; //{{1,3},{2,0}};//
-	    int[][] blocks2 = {{1,2,4},{0,6,3},{7,5,8}}; //{{1,2},{3,0}};//
-    	//134862705
-    	  
-    	     
-            Tablero board = new Tablero(blocks);
-            Tablero board2 = new Tablero(blocks2);
-            
-
-            //System.out.println(isGoal(board.blocks,board2.blocks));
-            //System.out.println(board.cadenaMatriz);
-            //System.out.println(board);
-            //System.out.println("Neighbors:");
-            //Iterable<Tablero> it = board.neighbors();
-            
-            
-            /*for (Tablero b : it) {
-                System.out.println(b);
-                System.out.println(b.cadenaMatriz);
-            }*/
-            
-            //ArrayList<Tablero>tf = encontrarTablero(board,board2);
-            
-            bestFirstSearch(board,board2);
-            //System.out.println(buscarCamino(board,board2));
-           // for (Tablero t : tf) {
-              //  System.out.println(t);
-                //System.out.println(b.cadenaMatriz);
-            //}
-            
-            // System.out.println(board);
+             
+                    
         }
 }
